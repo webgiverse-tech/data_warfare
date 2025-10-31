@@ -119,8 +119,14 @@ const Analysis = () => {
         throw new Error('Format de réponse inattendu du webhook.');
       }
     } catch (e: any) {
-      setError(e.message || 'Une erreur inattendue est survenue.');
-      showError(e.message || 'Échec de l\'analyse.');
+      let errorMessage = 'Une erreur inattendue est survenue.';
+      if (e instanceof TypeError && e.message === 'Failed to fetch') {
+        errorMessage = 'Impossible de se connecter au serveur d\'analyse. Veuillez vérifier votre connexion internet ou contacter le support si le problème persiste. (Problème de réseau ou CORS)';
+      } else if (e.message) {
+        errorMessage = e.message;
+      }
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
