@@ -48,6 +48,13 @@ const Header = () => {
                 Analyse
               </Link>
             </li>
+            {session && ( // Show Dashboard link only if logged in
+              <li>
+                <Link to="/dashboard" className="text-dw-text-secondary hover:text-dw-accent-secondary transition-colors font-subheading">
+                  Dashboard
+                </Link>
+              </li>
+            )}
           </ul>
           {isLoading ? (
             <Button disabled className="bg-dw-accent-primary/50 text-dw-text-primary font-subheading px-4 py-2">
