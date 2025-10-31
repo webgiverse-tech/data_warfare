@@ -33,7 +33,7 @@ const Index = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-6xl md:text-7xl font-heading gradient-text mb-6 leading-tight"
+          className="text-6xl md:text-7xl font-heading text-dw-text-primary mb-6 leading-tight"
         >
           DOMINEZ VOTRE MARCHÉ AVEC L'INTELLIGENCE CONCURRENTIELLE
         </motion.h1>
