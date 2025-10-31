@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
-import { showSuccess, showError } from '@/utils/toast';
+import { showSuccess, showError, toast } from '@/utils/toast'; // Import toast from utils
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -21,7 +21,7 @@ const Analysis = () => {
   const navigate = useNavigate();
   const { session, user, profile, isLoading, refreshProfile } = useSession();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false); // Used only for pre-emptive quota check
   const [hasInitiatedAnalysisFromParams, setHasInitiatedAnalysisFromParams] = useState(false);
 
   const validateUrl = (inputUrl: string) => {
@@ -78,7 +78,7 @@ const Analysis = () => {
       if (profile.analyses_remaining <= 0) {
         setError('Votre quota d\'analyses est atteint. Veuillez mettre à niveau votre plan.');
         showError('Quota atteint.');
-        setIsUpgradeModalOpen(true);
+        setIsUpgradeModalOpen(true); // Show modal if quota is already 0 before analysis
         setLoading(false);
         return;
       }
@@ -124,8 +124,15 @@ const Analysis = () => {
           showError('Erreur lors de la mise à jour du quota.');
         } else {
           await refreshProfile(); // Refresh profile data in context
-          if (profile.plan === 'free' && profile.analyses_count === 0) { // Check if it was the first free analysis
-            setIsUpgradeModalOpen(true);
+          // If it was a free plan and analyses_remaining just became 0, show a toast
+          if (profile.plan === 'free' && (profile.analyses_remaining - 1) === 0) {
+            toast.info("Votre essai gratuit est terminé ! Mettez à niveau pour plus d'analyses.", {
+              action: {
+                label: "Voir les plans",
+                onClick: () => navigate('/pricing'),
+              },
+              duration: 10000, // Keep toast visible longer
+            });
           }
         }
 
@@ -144,7 +151,7 @@ const Analysis = () => {
     } finally {
       setLoading(false);
     }
-  }, [session, user, profile, refreshProfile]); // Dependencies for useCallback
+  }, [session, user, profile, refreshProfile, navigate]); // Dependencies for useCallback
 
   useEffect(() => {
     const initialUrl = searchParams.get('url');
@@ -260,14 +267,15 @@ const Analysis = () => {
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
 
+      {/* This Dialog is now only for when quota is already 0 before analysis attempt */}
       <Dialog open={isUpgradeModalOpen} onOpenChange={setIsUpgradeModalOpen}>
         <DialogContent className="bg-dw-background-deep border border-dw-accent-primary/30 text-dw-text-primary p-8 rounded-lg max-w-md text-center">
           <DialogHeader>
             <DialogTitle className="text-3xl font-heading gradient-text mb-4">
-              Votre essai gratuit est terminé ! 💡
+              Votre quota d'analyses est atteint !
             </DialogTitle>
             <DialogDescription className="text-dw-text-secondary mb-6">
-              Choisissez votre plan pour continuer à dominer vos concurrents.
+              Veuillez mettre à niveau votre plan pour continuer à lancer des analyses.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex justify-center">
