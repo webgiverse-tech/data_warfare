@@ -96,6 +96,19 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-dw-background-deep text-dw-text-primary font-sans;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+/* Custom gradient for titles */
+.gradient-text {
+  background: linear-gradient(90deg, var(--dw-accent-primary), var(--dw-accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% auto;
+  animation: gradient-shift 3s ease infinite;
 }
