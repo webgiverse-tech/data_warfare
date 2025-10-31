@@ -33,12 +33,21 @@ const Analysis = () => {
     }
   };
 
-  const handleAnalysis = useCallback(async (targetUrl: string, isInitialLoad: boolean) => {
+  const handleAnalysis = useCallback(async (targetUrl: string) => {
     setError(null);
     setReport(null);
 
     if (!session || !user || !profile) {
       setIsAuthModalOpen(true);
+      return;
+    }
+
+    // Vérification du quota AVANT de lancer l'analyse
+    if (profile.analyses_remaining <= 0) {
+      setError('Votre quota d\'analyses est atteint. Veuillez mettre à niveau votre plan.');
+      showError('Quota atteint.');
+      setIsUpgradeModalOpen(true); // Afficher la modale de mise à niveau ici
+      setLoading(false); // S'assurer que le chargement est désactivé
       return;
     }
 
@@ -52,7 +61,7 @@ const Analysis = () => {
     showSuccess('Lancement de l\'analyse...');
 
     try {
-      // 1. Check for existing analysis in Supabase
+      // 1. Vérifier si l'analyse existe déjà dans Supabase
       const { data: existingAnalysis, error: fetchError } = await supabase
         .from('analyses')
         .select('result_json')
@@ -60,7 +69,7 @@ const Analysis = () => {
         .eq('target_url', targetUrl)
         .single();
 
-      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means "no rows found"
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 signifie "aucune ligne trouvée"
         console.error('Error fetching existing analysis:', fetchError);
         showError('Erreur lors de la vérification de l\'historique.');
         setLoading(false);
@@ -74,15 +83,7 @@ const Analysis = () => {
         return;
       }
 
-      // 2. If no existing analysis, check quota and proceed with new analysis
-      if (profile.analyses_remaining <= 0) {
-        setError('Votre quota d\'analyses est atteint. Veuillez mettre à niveau votre plan.');
-        showError('Quota atteint.');
-        setIsUpgradeModalOpen(true);
-        setLoading(false);
-        return;
-      }
-
+      // Si aucune analyse existante et quota disponible, procéder à la nouvelle analyse
       const res = await fetch('https://n8n-project-ivc9.onrender.com/webhook/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -96,10 +97,9 @@ const Analysis = () => {
 
       const data = await res.json();
       if (data && data[0] && data[0].output) {
-        setReport(data[0].output);
-        showSuccess('Rapport d\'analyse généré avec succès !');
+        setReport(data[0].output); // Afficher le rapport
 
-        // Save new analysis result to Supabase
+        // Enregistrer le nouveau résultat d'analyse dans Supabase
         const { error: insertError } = await supabase
           .from('analyses')
           .insert({ user_id: user.id, target_url: targetUrl, result_json: data[0].output });
@@ -109,7 +109,7 @@ const Analysis = () => {
           showError('Erreur lors de la sauvegarde de l\'analyse.');
         }
 
-        // Decrement analyses_remaining and increment analyses_count
+        // Décrémenter analyses_remaining et incrémenter analyses_count
         const { error: updateError } = await supabase
           .from('profiles')
           .update({
@@ -123,10 +123,8 @@ const Analysis = () => {
           console.error('Error updating profile quota:', updateError);
           showError('Erreur lors de la mise à jour du quota.');
         } else {
-          await refreshProfile(); // Refresh profile data in context
-          if (profile.plan === 'free' && profile.analyses_count === 0) { // Check if it was the first free analysis
-            setIsUpgradeModalOpen(true);
-          }
+          await refreshProfile(); // Rafraîchir les données du profil dans le contexte
+          // La modale de mise à niveau sera déclenchée lors de la prochaine tentative d'analyse si le quota est épuisé.
         }
 
       } else {
@@ -150,8 +148,8 @@ const Analysis = () => {
     const initialUrl = searchParams.get('url');
     if (initialUrl && !isLoading && session && user && profile && !hasInitiatedAnalysisFromParams) {
       setUrl(decodeURIComponent(initialUrl));
-      handleAnalysis(decodeURIComponent(initialUrl), true);
-      setHasInitiatedAnalysisFromParams(true); // Mark as initiated
+      handleAnalysis(decodeURIComponent(initialUrl)); // Appel sans le paramètre isInitialLoad
+      setHasInitiatedAnalysisFromParams(true); // Marquer comme initié
     }
   }, [searchParams, session, user, profile, isLoading, handleAnalysis, hasInitiatedAnalysisFromParams]);
 
@@ -160,7 +158,7 @@ const Analysis = () => {
       setIsAuthModalOpen(true);
       return;
     }
-    handleAnalysis(url, false);
+    handleAnalysis(url); // Appel sans le paramètre isInitialLoad
   };
 
   const isAnalysisDisabled = isLoading || loading || (profile && profile.analyses_remaining <= 0);
