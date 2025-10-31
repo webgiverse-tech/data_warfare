@@ -71,6 +71,7 @@ const Index = () => {
 
       <div className="relative z-10 mt-20 w-full max-w-6xl px-4">
         <motion.h2
+          id="features" // Added ID for navigation
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.5 }}
@@ -107,6 +108,7 @@ const Index = () => {
 
       <div className="relative z-10 mt-20 w-full max-w-6xl px-4">
         <motion.h2
+          id="pricing" // Added ID for navigation
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.5 }}
