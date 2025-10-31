@@ -6,16 +6,24 @@ import { useNavigate } from 'react-router-dom';
 import { showError } from '@/utils/toast';
 import ParticlesBackground from '@/components/ParticlesBackground';
 import { motion } from 'framer-motion';
-import { Search, Code, Gauge, FileText, Link2, Users, Quote } from 'lucide-react'; // Importation des icônes
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Importation des composants Card
+import { Search, Code, Gauge, FileText, Link2, Users, Quote } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useSession } from '@/contexts/SessionContext'; // Import useSession
+import AuthModal from '@/components/AuthModal'; // Import AuthModal
 
 const Index = () => {
   const [url, setUrl] = useState<string>('');
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // State for auth modal
   const navigate = useNavigate();
+  const { session, isLoading } = useSession(); // Use session context
 
   const handleAnalyzeClick = () => {
     if (!url || !url.startsWith('http')) {
       showError('Veuillez entrer une URL valide pour l\'analyse.');
+      return;
+    }
+    if (!session) {
+      setIsAuthModalOpen(true); // Open auth modal if not logged in
       return;
     }
     navigate(`/analysis?url=${encodeURIComponent(url)}`);
@@ -81,10 +89,12 @@ const Index = () => {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             className="flex-grow bg-dw-background-glass border border-dw-accent-primary/50 text-dw-text-primary placeholder:text-dw-text-secondary focus:border-dw-accent-secondary focus:ring-dw-accent-secondary transition-all duration-300"
+            disabled={isLoading}
           />
           <Button
             onClick={handleAnalyzeClick}
             className="bg-dw-accent-primary hover:bg-dw-accent-primary/90 text-dw-text-primary font-subheading px-8 py-3 text-lg relative overflow-hidden group"
+            disabled={isLoading}
           >
             <span className="relative z-10">🎯 Lancer l'analyse</span>
             <span className="absolute inset-0 bg-gradient-to-r from-dw-accent-primary to-dw-accent-secondary opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
@@ -94,7 +104,7 @@ const Index = () => {
 
       <div className="relative z-10 mt-20 w-full max-w-6xl px-4">
         <motion.h2
-          id="features" // Added ID for navigation
+          id="features"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.5 }}
@@ -132,7 +142,7 @@ const Index = () => {
 
       <div className="relative z-10 mt-20 w-full max-w-6xl px-4">
         <motion.h2
-          id="pricing" // Added ID for navigation
+          id="pricing"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.5 }}
@@ -144,8 +154,8 @@ const Index = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             { name: "Scout", price: "Gratuit", features: ["1 analyse/jour", "Rapport basique"], highlight: false },
-            { name: "Tactique", price: "49€/mois", features: ["10 analyses/jour", "Rapport complet", "Export PDF"], highlight: true },
-            { name: "Général", price: "199€/mois", features: ["Analyses illimitées", "Rapport avancé", "Support prioritaire"], highlight: false },
+            { name: "Tactique", price: "19€/mois", features: ["30 analyses/mois", "Rapports détaillés", "Graphiques enrichis"], highlight: true },
+            { name: "Général", price: "49€/mois", features: ["104 analyses/mois", "Analyses illimitées", "Export PDF", "Veille concurrentielle"], highlight: false },
           ].map((plan, index) => (
             <motion.div
               key={index}
@@ -174,7 +184,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Nouvelle section Témoignages */}
       <div className="relative z-10 mt-20 w-full max-w-6xl px-4 pb-20">
         <motion.h2
           id="testimonials"
@@ -215,6 +224,7 @@ const Index = () => {
           ))}
         </div>
       </div>
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </div>
   );
 };
