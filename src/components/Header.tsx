@@ -5,8 +5,8 @@ const Header = () => {
   return (
     <header className="p-4 bg-dw-background-deep border-b border-dw-background-glass backdrop-blur-sm fixed w-full z-50">
       <div className="container mx-auto flex justify-between items-center">
-        <Link to="/" className="text-2xl font-heading gradient-text">
-          Data Warfare
+        <Link to="/" className="flex items-center space-x-2">
+          <img src="/logo.png" alt="Data Warfare Logo" className="h-8" /> {/* Adjust height as needed */}
         </Link>
         <nav>
           <ul className="flex space-x-6">
