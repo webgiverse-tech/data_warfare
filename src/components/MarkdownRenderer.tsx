@@ -12,7 +12,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ markdown }) => {
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       components={{
-        h1: ({ node, ...props }) => <h1 className="text-4xl font-heading gradient-text mb-6 mt-10" {...props} />,
+        h1: ({ node, ...props }) => <h1 className="text-4xl font-heading text-dw-accent-primary mb-6 mt-10" {...props} />,
         h2: ({ node, ...props }) => <h2 className="text-3xl font-subheading text-dw-accent-secondary mb-4 mt-8 border-b border-dw-background-glass pb-2" {...props} />,
         h3: ({ node, ...props }) => <h3 className="text-2xl font-subheading text-dw-text-primary mb-3 mt-6" {...props} />,
         p: ({ node, ...props }) => <p className="text-lg text-dw-text-secondary mb-4 leading-relaxed" {...props} />,
