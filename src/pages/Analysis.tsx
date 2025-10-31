@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
@@ -7,8 +7,8 @@ import { showSuccess, showError } from '@/utils/toast';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useSession } from '@/contexts/SessionContext'; // Import useSession
-import AuthModal from '@/components/AuthModal'; // Import AuthModal
+import { useSession } from '@/contexts/SessionContext';
+import AuthModal from '@/components/AuthModal';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
@@ -19,20 +19,10 @@ const Analysis = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { session, user, profile, isLoading, refreshProfile } = useSession(); // Use session context
+  const { session, user, profile, isLoading, refreshProfile } = useSession();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
-
-  useEffect(() => {
-    const initialUrl = searchParams.get('url');
-    if (initialUrl) {
-      setUrl(decodeURIComponent(initialUrl));
-      // Only attempt analysis if session is loaded and user is available
-      if (!isLoading && session && user && profile) {
-        analyzeCompetitor(decodeURIComponent(initialUrl));
-      }
-    }
-  }, [searchParams, session, user, profile, isLoading]); // Depend on session, user, profile, isLoading
+  const [hasInitiatedAnalysisFromParams, setHasInitiatedAnalysisFromParams] = useState(false);
 
   const validateUrl = (inputUrl: string) => {
     try {
@@ -43,19 +33,12 @@ const Analysis = () => {
     }
   };
 
-  const analyzeCompetitor = async (targetUrl: string) => {
+  const handleAnalysis = useCallback(async (targetUrl: string, isInitialLoad: boolean) => {
     setError(null);
     setReport(null);
 
     if (!session || !user || !profile) {
       setIsAuthModalOpen(true);
-      return;
-    }
-
-    if (profile.analyses_remaining <= 0) {
-      setError('Votre quota d\'analyses est atteint. Veuillez mettre à niveau votre plan.');
-      showError('Quota atteint.');
-      setIsUpgradeModalOpen(true);
       return;
     }
 
@@ -69,6 +52,37 @@ const Analysis = () => {
     showSuccess('Lancement de l\'analyse...');
 
     try {
+      // 1. Check for existing analysis in Supabase
+      const { data: existingAnalysis, error: fetchError } = await supabase
+        .from('analyses')
+        .select('result_json')
+        .eq('user_id', user.id)
+        .eq('target_url', targetUrl)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means "no rows found"
+        console.error('Error fetching existing analysis:', fetchError);
+        showError('Erreur lors de la vérification de l\'historique.');
+        setLoading(false);
+        return;
+      }
+
+      if (existingAnalysis) {
+        setReport(existingAnalysis.result_json);
+        showSuccess('Rapport récupéré de l\'historique !');
+        setLoading(false);
+        return;
+      }
+
+      // 2. If no existing analysis, check quota and proceed with new analysis
+      if (profile.analyses_remaining <= 0) {
+        setError('Votre quota d\'analyses est atteint. Veuillez mettre à niveau votre plan.');
+        showError('Quota atteint.');
+        setIsUpgradeModalOpen(true);
+        setLoading(false);
+        return;
+      }
+
       const res = await fetch('https://n8n-project-ivc9.onrender.com/webhook/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,7 +99,7 @@ const Analysis = () => {
         setReport(data[0].output);
         showSuccess('Rapport d\'analyse généré avec succès !');
 
-        // Save analysis result to Supabase
+        // Save new analysis result to Supabase
         const { error: insertError } = await supabase
           .from('analyses')
           .insert({ user_id: user.id, target_url: targetUrl, result_json: data[0].output });
@@ -109,7 +123,7 @@ const Analysis = () => {
           console.error('Error updating profile quota:', updateError);
           showError('Erreur lors de la mise à jour du quota.');
         } else {
-          refreshProfile(); // Refresh profile data in context
+          await refreshProfile(); // Refresh profile data in context
           if (profile.plan === 'free' && profile.analyses_count === 0) { // Check if it was the first free analysis
             setIsUpgradeModalOpen(true);
           }
@@ -130,14 +144,23 @@ const Analysis = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session, user, profile, refreshProfile]); // Dependencies for useCallback
+
+  useEffect(() => {
+    const initialUrl = searchParams.get('url');
+    if (initialUrl && !isLoading && session && user && profile && !hasInitiatedAnalysisFromParams) {
+      setUrl(decodeURIComponent(initialUrl));
+      handleAnalysis(decodeURIComponent(initialUrl), true);
+      setHasInitiatedAnalysisFromParams(true); // Mark as initiated
+    }
+  }, [searchParams, session, user, profile, isLoading, handleAnalysis, hasInitiatedAnalysisFromParams]);
 
   const handleAnalyzeButtonClick = () => {
     if (!session || !user || !profile) {
       setIsAuthModalOpen(true);
       return;
     }
-    analyzeCompetitor(url);
+    handleAnalysis(url, false);
   };
 
   const isAnalysisDisabled = isLoading || loading || (profile && profile.analyses_remaining <= 0);
