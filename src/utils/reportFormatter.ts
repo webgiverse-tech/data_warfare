@@ -103,7 +103,7 @@ export const formatAnalysisReport = (rawReport: string): string => {
 
   // Insights Résumés
   output += `## 🔮 Insights Clés\n\n`;
-  output += `- ChatGPT capitalise sur le minimalisme mais expose des failles exploitables.\n`;
+  output += `- ChatGPT capitalise sur le minimalisme but expose des failles exploitables.\n`;
   output += `- La transparence tarifaire, un contenu riche et la preuve sociale sont vos leviers stratégiques pour gagner la confiance.\n`;
   output += `- Une optimisation SEO technique proactive et un blog actif renforceront significativement votre visibilité organique et votre autorité.\n\n`;
   output += `**Conclusion** : Transformez la simplicité de leur modèle en votre avantage stratégique pour dominer le marché et convertir l'intérêt en action.\n`;
