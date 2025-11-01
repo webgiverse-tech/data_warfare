@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import MarkdownRenderer from '@/components/MarkdownRenderer';
+import MarkdownRenderer from '@/components/MarkdownRenderer'; // Ensure this import is correct
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -553,7 +553,6 @@ const Dashboard: React.FC = () => {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      {/* Removed: Download button that triggered PDF export directly from table */}
                       <Button
                         variant="ghost"
                         size="sm"
