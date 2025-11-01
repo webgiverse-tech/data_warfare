@@ -18,6 +18,7 @@ const Pricing: React.FC = () => {
   const [loadingCheckout, setLoadingCheckout] = useState(false);
 
   const handleSubscribe = async (planId: string) => {
+    console.log(`Attempting to subscribe to plan: ${planId}`); // Log 1
     if (!session) {
       showError("Veuillez vous connecter pour vous abonner.");
       navigate('/login');
@@ -32,25 +33,29 @@ const Pricing: React.FC = () => {
 
     setLoadingCheckout(true);
     try {
-      // Call the Supabase Edge Function to create a Moneroo checkout session
+      console.log('Calling Supabase Edge Function: create-moneroo-checkout'); // Log 2
       const { data, error } = await supabase.functions.invoke('create-moneroo-checkout', {
         body: { planId: planId },
       });
 
       if (error) {
+        console.error('Error from Supabase Edge Function invocation:', error); // Log 3
         throw new Error(error.message);
       }
 
       if (data && data.checkout_url) {
+        console.log('Received checkout URL:', data.checkout_url); // Log 4
         window.location.href = data.checkout_url; // Redirect to Moneroo checkout
       } else {
+        console.error('Checkout URL not received from Edge Function.'); // Log 5
         throw new Error("URL de paiement non reçue.");
       }
     } catch (error: any) {
-      console.error("Error creating checkout session:", error);
+      console.error("Caught error during checkout process:", error); // Log 6
       showError(`Erreur lors de la création de la session de paiement: ${error.message}`);
     } finally {
       setLoadingCheckout(false);
+      console.log('Checkout process finished.'); // Log 7
     }
   };
 
@@ -62,7 +67,7 @@ const Pricing: React.FC = () => {
       features: ["Analyse simple", "Rapport basique"],
       highlight: false,
       buttonText: "Commencer gratuitement",
-      id: "free", // Changed from lygosappPriceId
+      id: "free",
     },
     {
       name: "Pro Tactique",
@@ -71,7 +76,7 @@ const Pricing: React.FC = () => {
       features: ["Rapports détaillés", "Graphiques enrichis", "Support standard"],
       highlight: true,
       buttonText: "Passer au plan Pro",
-      id: "pro", // Changed from lygosappPriceId
+      id: "pro",
     },
     {
       name: "Elite Stratégique",
@@ -80,7 +85,7 @@ const Pricing: React.FC = () => {
       features: ["Analyses illimitées", "Export PDF", "Veille concurrentielle", "Support prioritaire"],
       highlight: false,
       buttonText: "Passer au plan Elite",
-      id: "elite", // Changed from lygosappPriceId
+      id: "elite",
     },
   ];
 
@@ -133,7 +138,7 @@ const Pricing: React.FC = () => {
             <Button
               onClick={() => handleSubscribe(plan.id)}
               className={`w-full font-subheading text-lg ${plan.highlight ? 'bg-dw-accent-primary hover:bg-dw-accent-primary/90' : 'bg-dw-accent-secondary/20 hover:bg-dw-accent-secondary/30 text-dw-accent-secondary'}`}
-              disabled={loadingCheckout || plan.id === "free"} // Disable for free plan or while loading
+              disabled={loadingCheckout || plan.id === "free"}
             >
               {loadingCheckout ? 'Chargement...' : plan.buttonText}
             </Button>
