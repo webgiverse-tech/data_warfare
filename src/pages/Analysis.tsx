@@ -11,6 +11,7 @@ import { useSession } from '@/contexts/SessionContext';
 import AuthModal from '@/components/AuthModal';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { formatAnalysisReport } from '@/utils/reportFormatter'; // Import the new formatter
 
 const Analysis = () => {
   const [url, setUrl] = useState<string>('');
@@ -77,7 +78,7 @@ const Analysis = () => {
       }
 
       if (existingAnalysis) {
-        setReport(existingAnalysis.result_json);
+        setReport(formatAnalysisReport(existingAnalysis.result_json)); // Format existing report
         showSuccess('Rapport récupéré de l\'historique !');
         setLoading(false);
         return;
@@ -97,12 +98,13 @@ const Analysis = () => {
 
       const data = await res.json();
       if (data && data[0] && data[0].output) {
-        setReport(data[0].output); // Afficher le rapport
+        const formattedOutput = formatAnalysisReport(data[0].output); // Format new report
+        setReport(formattedOutput); // Afficher le rapport
 
         // Enregistrer le nouveau résultat d'analyse dans Supabase
         const { error: insertError } = await supabase
           .from('analyses')
-          .insert({ user_id: user.id, target_url: targetUrl, result_json: data[0].output });
+          .insert({ user_id: user.id, target_url: targetUrl, result_json: data[0].output }); // Save raw output
 
         if (insertError) {
           console.error('Error saving analysis:', insertError);

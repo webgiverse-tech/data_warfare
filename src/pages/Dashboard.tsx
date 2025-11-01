@@ -20,6 +20,7 @@ import InsightsSection from '@/components/dashboard/InsightsSection';
 import QuickActions from '@/components/dashboard/QuickActions';
 import ReportModal from '@/components/dashboard/ReportModal';
 import DeleteConfirmModal from '@/components/dashboard/DeleteConfirmModal';
+import { formatAnalysisReport } from '@/utils/reportFormatter'; // Import the new formatter
 
 export interface Analysis {
   id: string;
@@ -106,7 +107,7 @@ const Dashboard: React.FC = () => {
   }
 
   const handleViewReport = (reportContent: string) => {
-    setSelectedAnalysisReport(reportContent);
+    setSelectedAnalysisReport(formatAnalysisReport(reportContent)); // Format report before viewing
     setIsReportModalOpen(true);
   };
 
@@ -198,8 +199,10 @@ const Dashboard: React.FC = () => {
   // Filtering logic
   const filteredAnalyses = analyses.filter(analysis => {
     const extractSummary = (markdownString: string): string => {
-      const firstParagraphMatch = markdownString.match(/^(.*?)\n\n/);
-      const summary = firstParagraphMatch ? firstParagraphMatch[1] : markdownString.substring(0, 100);
+      // Use the formatter to get a consistent summary structure
+      const formattedMarkdown = formatAnalysisReport(markdownString);
+      const firstParagraphMatch = formattedMarkdown.match(/## ⚡ Introduction Stratégique\n\n(.*?)\n\n---/s);
+      const summary = firstParagraphMatch ? firstParagraphMatch[1] : formattedMarkdown.substring(0, 100);
       return summary.length > 100 ? summary.substring(0, 100) + '...' : summary;
     };
 
