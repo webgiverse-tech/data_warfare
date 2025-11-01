@@ -62,14 +62,15 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Custom Data Warfare Colors
-        'dw-background-deep': 'hsl(var(--dw-background-deep))',
-        'dw-background-glass': 'hsl(var(--dw-background-glass))',
-        'dw-text-primary': 'hsl(var(--dw-text-primary))',
-        'dw-text-secondary': 'hsl(var(--dw-text-secondary))',
-        'dw-accent-primary': 'hsl(var(--dw-accent-primary))',
-        'dw-accent-secondary': 'hsl(var(--dw-accent-secondary))',
-        'dw-error': 'hsl(var(--dw-error))',
+        // Custom Data Warfare colors
+        'dw-background-deep': '#0a1929',
+        'dw-background-glass': 'rgba(255,255,255,0.04)',
+        'dw-accent-primary': '#ff6b35',
+        'dw-accent-secondary': '#00d9ff',
+        'dw-text-primary': '#ffffff',
+        'dw-text-secondary': '#cbd5e1',
+        'dw-success': '#2ecc71',
+        'dw-error': '#e74c3c',
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -93,15 +94,22 @@ export default {
             height: "0",
           },
         },
+        "gradient-shift": {
+          "0%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+          "100%": { backgroundPosition: "0% 50%" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "gradient-shift": "gradient-shift 3s ease infinite",
       },
       fontFamily: {
-        heading: ['Orbitron', 'sans-serif'],
-        subheading: ['Rajdhani', 'sans-serif'],
-        mono: ['Space Mono', 'monospace'],
+        sans: ['Inter', 'sans-serif'],
+        heading: ['Orbitron', 'sans-serif'], // For main titles
+        subheading: ['Rajdhani', 'sans-serif'], // For subtitles/sections
+        mono: ['Space Mono', 'monospace'], // For data/code
       },
     },
   },

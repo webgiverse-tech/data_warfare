@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { showError } from '@/utils/toast';
+import { showSuccess, showError } from '@/utils/toast';
 
 interface Profile {
   id: string;
@@ -9,8 +9,8 @@ interface Profile {
   plan: string;
   analyses_count: number;
   analyses_remaining: number;
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface SessionContextType {
@@ -23,46 +23,47 @@ interface SessionContextType {
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
-export const SessionContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchProfile = useCallback(async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+  const fetchSessionAndProfile = async () => {
+    setIsLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    setSession(session);
+    setUser(session?.user || null);
 
-    if (error) {
-      console.error('Error fetching profile:', error);
-      showError('Erreur lors du chargement du profil utilisateur.');
-      setProfile(null);
+    if (session?.user) {
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        setProfile(null);
+      } else {
+        setProfile(profileData);
+      }
     } else {
-      setProfile(data);
+      setProfile(null);
     }
-  }, []);
+    setIsLoading(false);
+  };
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
-      setSession(currentSession);
-      setUser(currentSession?.user || null);
-      if (currentSession?.user) {
-        await fetchProfile(currentSession.user.id);
+    fetchSessionAndProfile();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user || null);
+      if (session?.user) {
+        fetchSessionAndProfile(); // Re-fetch profile on auth state change
       } else {
         setProfile(null);
-      }
-      setIsLoading(false);
-    });
-
-    // Initial session check
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      setSession(initialSession);
-      setUser(initialSession?.user || null);
-      if (initialSession?.user) {
-        fetchProfile(initialSession.user.id);
       }
       setIsLoading(false);
     });
@@ -70,13 +71,24 @@ export const SessionContextProvider: React.FC<{ children: ReactNode }> = ({ chil
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [fetchProfile]);
+  }, []);
 
-  const refreshProfile = useCallback(async () => {
+  const refreshProfile = async () => {
     if (user) {
-      await fetchProfile(user.id);
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Error refreshing profile:', profileError);
+        setProfile(null);
+      } else {
+        setProfile(profileData);
+      }
     }
-  }, [user, fetchProfile]);
+  };
 
   return (
     <SessionContext.Provider value={{ session, user, profile, isLoading, refreshProfile }}>
