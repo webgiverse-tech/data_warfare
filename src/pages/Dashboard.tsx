@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useSession } from '@/contexts/SessionContext';
@@ -11,6 +11,10 @@ import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 import {
   Loader2,
@@ -28,6 +32,7 @@ import {
   Zap,
   Crown,
   Rocket,
+  Search,
 } from 'lucide-react';
 
 // Recharts imports
@@ -44,6 +49,10 @@ import {
   Cell,
   Legend,
 } from 'recharts';
+
+// PDF Export imports
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface Analysis {
   id: string;
@@ -62,6 +71,13 @@ const Dashboard: React.FC = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [analysisToDeleteId, setAnalysisToDeleteId] = useState<string | null>(null);
+
+  // New states for search, filter, and anonymization
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [filterPeriod, setFilterPeriod] = useState<string>('all'); // 'all', '7days', '30days'
+  const [anonymizeData, setAnonymizeData] = useState<boolean>(false);
+
+  const reportModalRef = useRef<HTMLDivElement>(null); // Ref for the report modal content
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -153,16 +169,11 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const extractSummary = (jsonString: string): string => {
-    try {
-      const data = JSON.parse(jsonString);
-      // Assuming the first paragraph of the output is a good summary
-      const firstParagraphMatch = data.output.match(/^(.*?)\n\n/);
-      return firstParagraphMatch ? firstParagraphMatch[1].substring(0, 100) + '...' : 'Aucun résumé disponible.';
-    } catch (e) {
-      console.error('Error parsing result_json for summary:', e);
-      return 'Erreur de résumé.';
-    }
+  const extractSummary = (markdownString: string): string => {
+    // Extract the first paragraph from markdown
+    const firstParagraphMatch = markdownString.match(/^(.*?)\n\n/);
+    const summary = firstParagraphMatch ? firstParagraphMatch[1] : markdownString.substring(0, 100);
+    return summary.length > 100 ? summary.substring(0, 100) + '...' : summary;
   };
 
   const handleViewReport = (reportContent: string) => {
@@ -196,9 +207,46 @@ const Dashboard: React.FC = () => {
     setAnalysisToDeleteId(null);
   };
 
-  const handleExportPdf = (analysisId: string) => {
-    showSuccess('Fonctionnalité d\'export PDF en cours de développement !');
-    // TODO: Implement react-pdf or similar
+  const handleExportPdf = async () => {
+    if (!reportModalRef.current) {
+      showError('Impossible de générer le PDF. Contenu du rapport introuvable.');
+      return;
+    }
+
+    showSuccess('Génération du PDF en cours...');
+    try {
+      const canvas = await html2canvas(reportModalRef.current, {
+        scale: 2, // Increase scale for better quality
+        useCORS: true, // Important for images from external sources
+        windowWidth: reportModalRef.current.scrollWidth,
+        windowHeight: reportModalRef.current.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      let heightLeft = pdfHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+      heightLeft -= pdf.internal.pageSize.getHeight();
+
+      while (heightLeft >= 0) {
+        position = heightLeft - pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+        heightLeft -= pdf.internal.pageSize.getHeight();
+      }
+
+      pdf.save('rapport-data-warfare.pdf');
+      showSuccess('Rapport exporté en PDF avec succès !');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      showError('Erreur lors de la génération du PDF.');
+    }
   };
 
   const handleNewAnalysis = () => {
@@ -213,8 +261,29 @@ const Dashboard: React.FC = () => {
     showSuccess('Données actualisées !');
   };
 
+  // Filtering logic
+  const filteredAnalyses = analyses.filter(analysis => {
+    const matchesSearch = searchTerm === '' ||
+      analysis.target_url.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      extractSummary(analysis.result_json).toLowerCase().includes(searchTerm.toLowerCase());
+
+    const analysisDate = new Date(analysis.created_at);
+    const now = new Date();
+    let matchesPeriod = true;
+
+    if (filterPeriod === '7days') {
+      const sevenDaysAgo = new Date(now.setDate(now.getDate() - 7));
+      matchesPeriod = analysisDate >= sevenDaysAgo;
+    } else if (filterPeriod === '30days') {
+      const thirtyDaysAgo = new Date(now.setDate(now.getDate() - 30));
+      matchesPeriod = analysisDate >= thirtyDaysAgo;
+    }
+
+    return matchesSearch && matchesPeriod;
+  });
+
   // Data for Recharts (example: analyses per day/week)
-  const analysesByDate = analyses.reduce((acc, analysis) => {
+  const analysesByDate = filteredAnalyses.reduce((acc, analysis) => {
     const date = new Date(analysis.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
     acc[date] = (acc[date] || 0) + 1;
     return acc;
@@ -235,6 +304,9 @@ const Dashboard: React.FC = () => {
   const analysesUsedPercentage = profile.analyses_count && profile.analyses_remaining !== null
     ? (profile.analyses_count / (profile.analyses_count + profile.analyses_remaining)) * 100
     : 0;
+
+  // Placeholder for Global Performance Score
+  const globalPerformanceScore = "N/A"; // Requires structured data from result_json
 
   return (
     <div className="container mx-auto p-8 min-h-[calc(100vh-160px)] flex flex-col bg-dw-background-deep text-dw-text-primary">
@@ -277,7 +349,7 @@ const Dashboard: React.FC = () => {
       </motion.div>
 
       {/* Section 2: Indicateurs (KPI cards) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -321,13 +393,31 @@ const Dashboard: React.FC = () => {
             </CardContent>
           </Card>
         </motion.div>
+        {/* Section "Performance Globale" */}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+        >
+          <Card className="bg-dw-background-glass border border-dw-accent-secondary/20 rounded-lg p-6 text-center backdrop-blur-sm shadow-lg shadow-dw-accent-secondary/10">
+            <CardHeader className="p-0 mb-4">
+              <CardTitle className="text-xl font-subheading text-dw-accent-secondary">Performance Globale</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <p className="text-5xl font-mono text-dw-accent-primary">{globalPerformanceScore}</p>
+              <p className="text-sm text-dw-text-secondary mt-2">
+                (Nécessite une extraction structurée des données de rapport)
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
 
       {/* Section 3: Jauge de quota */}
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.7 }}
+        transition={{ duration: 0.6, delay: 0.8 }}
         className="mb-12 bg-dw-background-glass border border-dw-accent-secondary/20 rounded-lg p-6 shadow-lg shadow-dw-accent-secondary/10 flex flex-col items-center"
       >
         <h2 className="text-3xl font-subheading text-dw-accent-secondary mb-6">Quota d'Analyses</h2>
@@ -356,17 +446,56 @@ const Dashboard: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.8 }}
+        transition={{ duration: 0.6, delay: 0.9 }}
         className="mb-12 bg-dw-background-glass border border-dw-accent-secondary/20 rounded-lg p-6 shadow-lg shadow-dw-accent-secondary/10"
       >
         <h2 className="text-3xl font-subheading text-dw-accent-secondary mb-6">Historique des Analyses</h2>
+
+        {/* Search and Filter Controls */}
+        <div className="flex flex-col sm:flex-row items-center justify-between mb-6 space-y-4 sm:space-y-0 sm:space-x-4">
+          <div className="relative w-full sm:w-1/2">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dw-text-secondary" />
+            <Input
+              type="text"
+              placeholder="Rechercher par URL ou résumé..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 bg-dw-background-deep border-dw-accent-secondary/30 text-dw-text-primary placeholder:text-dw-text-secondary focus:border-dw-accent-primary focus:ring-dw-accent-primary"
+            />
+          </div>
+          <div className="flex items-center space-x-4 w-full sm:w-auto">
+            <Select value={filterPeriod} onValueChange={setFilterPeriod}>
+              <SelectTrigger className="w-[180px] bg-dw-background-deep border-dw-accent-secondary/30 text-dw-text-primary">
+                <SelectValue placeholder="Filtrer par période" />
+              </SelectTrigger>
+              <SelectContent className="bg-dw-background-deep border-dw-accent-secondary/30 text-dw-text-primary">
+                <SelectItem value="all">Toutes les périodes</SelectItem>
+                <SelectItem value="7days">7 derniers jours</SelectItem>
+                <SelectItem value="30days">30 derniers jours</SelectItem>
+                {/* Add more advanced filters here if result_json becomes structured */}
+                {/* <SelectItem value="seo-performance">Par performance SEO (future)</SelectItem> */}
+                {/* <SelectItem value="competitor-type">Par type de concurrent (future)</SelectItem> */}
+              </SelectContent>
+            </Select>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="anonymize-mode"
+                checked={anonymizeData}
+                onCheckedChange={setAnonymizeData}
+                className="data-[state=checked]:bg-dw-accent-primary data-[state=unchecked]:bg-dw-background-glass"
+              />
+              <Label htmlFor="anonymize-mode" className="text-dw-text-secondary">Anonymiser</Label>
+            </div>
+          </div>
+        </div>
+
         {loadingAnalyses ? (
           <div className="flex justify-center items-center py-8">
             <Loader2 className="h-8 w-8 text-dw-accent-primary animate-spin" />
             <p className="ml-4 text-dw-text-secondary">Chargement de l'historique...</p>
           </div>
-        ) : analyses.length === 0 ? (
-          <p className="text-center text-dw-text-secondary py-8">Aucune analyse trouvée. Lancez votre première analyse !</p>
+        ) : filteredAnalyses.length === 0 ? (
+          <p className="text-center text-dw-text-secondary py-8">Aucune analyse trouvée correspondant à vos critères.</p>
         ) : (
           <div className="overflow-x-auto">
             <Table>
@@ -379,7 +508,7 @@ const Dashboard: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {analyses.map((analysis) => (
+                {filteredAnalyses.map((analysis) => (
                   <TableRow key={analysis.id} className="border-dw-background-glass hover:bg-dw-background-glass/50">
                     <TableCell className="text-dw-text-secondary">
                       {new Date(analysis.created_at).toLocaleDateString('fr-FR', {
@@ -389,9 +518,11 @@ const Dashboard: React.FC = () => {
                       })}
                     </TableCell>
                     <TableCell className="text-dw-text-primary font-subheading">
-                      <a href={analysis.target_url} target="_blank" rel="noopener noreferrer" className="hover:text-dw-accent-primary">
-                        {analysis.target_url.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0]}
-                      </a>
+                      {anonymizeData ? 'Site Concurrent Anonyme' : (
+                        <a href={analysis.target_url} target="_blank" rel="noopener noreferrer" className="hover:text-dw-accent-primary">
+                          {analysis.target_url.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0]}
+                        </a>
+                      )}
                     </TableCell>
                     <TableCell className="text-dw-text-secondary text-sm max-w-xs truncate">
                       {extractSummary(analysis.result_json)}
@@ -408,7 +539,7 @@ const Dashboard: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleExportPdf(analysis.id)}
+                        onClick={() => handleExportPdf()} // PDF export now uses the currently viewed report
                         className="text-dw-text-secondary hover:bg-dw-text-secondary/20"
                       >
                         <Download className="h-4 w-4" />
@@ -442,7 +573,7 @@ const Dashboard: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.9 }}
+        transition={{ duration: 0.6, delay: 1.0 }}
         className="mb-12 bg-dw-background-glass border border-dw-accent-secondary/20 rounded-lg p-6 shadow-lg shadow-dw-accent-secondary/10"
       >
         <h2 className="text-3xl font-subheading text-dw-accent-secondary mb-6">Insights Stratégiques</h2>
@@ -496,7 +627,7 @@ const Dashboard: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 1.0 }}
+        transition={{ duration: 0.6, delay: 1.1 }}
         className="mb-12 bg-dw-background-glass border border-dw-accent-secondary/20 rounded-lg p-6 shadow-lg shadow-dw-accent-secondary/10 flex flex-wrap justify-center gap-4"
       >
         <Button
@@ -506,7 +637,7 @@ const Dashboard: React.FC = () => {
           <PlusCircle className="h-5 w-5 mr-2" /> Nouvelle Analyse
         </Button>
         <Button
-          onClick={() => showSuccess('Fonctionnalité d\'export de toutes les analyses en PDF en cours de développement !')}
+          onClick={() => showError('Fonctionnalité d\'export de toutes les analyses en PDF en cours de développement !')}
           className="bg-dw-accent-secondary/20 hover:bg-dw-accent-secondary/30 text-dw-accent-secondary font-subheading px-6 py-3 flex items-center"
         >
           <Download className="h-5 w-5 mr-2" /> Exporter tout en PDF
@@ -534,10 +665,13 @@ const Dashboard: React.FC = () => {
               Voici le rapport détaillé de votre analyse.
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[70vh] overflow-y-auto custom-scrollbar pr-4">
+          <div ref={reportModalRef} className="max-h-[70vh] overflow-y-auto custom-scrollbar pr-4">
             {selectedAnalysisReport && <MarkdownRenderer markdown={selectedAnalysisReport} />}
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex justify-end space-x-2">
+            <Button onClick={handleExportPdf} className="bg-dw-accent-secondary/20 hover:bg-dw-accent-secondary/30 text-dw-accent-secondary font-subheading">
+              <Download className="h-4 w-4 mr-2" /> Exporter en PDF
+            </Button>
             <Button onClick={() => setIsReportModalOpen(false)} className="bg-dw-accent-primary hover:bg-dw-accent-primary/90 text-dw-text-primary font-subheading">
               Fermer
             </Button>
