@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr } = from 'date-fns/locale';
 
 export const formatAnalysisReport = (rawReport: string): string => {
   // Initial cleaning and basic structure parsing
@@ -42,7 +42,7 @@ export const formatAnalysisReport = (rawReport: string): string => {
 
   const section4Match = cleanedReport.match(/## 4\. Les 3 Leçons Clés et votre Plan d'Action Immédiat[^]*?(?=## Conclusion Stratégique|$)/);
   if (section4Match) {
-    planDAction = section4Match[0].replace('## 4. Les 3 Leçons Clés et votre Plan d'Action Immédiat', '').trim();
+    planDAction = section4Match[0].replace(`## 4. Les 3 Leçons Clés et votre Plan d'Action Immédiat`, '').trim();
   }
 
   const conclusionMatch = cleanedReport.match(/## Conclusion Stratégique[^]*/);
