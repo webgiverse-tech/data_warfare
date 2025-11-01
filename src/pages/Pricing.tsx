@@ -1,12 +1,51 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useSession } from '@/contexts/SessionContext';
+import { supabase } from '@/integrations/supabase/client';
+import { showSuccess, showError } from '@/utils/toast';
 
 const Pricing: React.FC = () => {
   const cardVariants = {
     hidden: { opacity: 0, y: 50 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+  };
+
+  const navigate = useNavigate();
+  const { session } = useSession();
+  const [loadingCheckout, setLoadingCheckout] = useState(false);
+
+  const handleSubscribe = async (priceId: string) => {
+    if (!session) {
+      showError("Veuillez vous connecter pour vous abonner.");
+      navigate('/login');
+      return;
+    }
+
+    setLoadingCheckout(true);
+    try {
+      // Call the Supabase Edge Function to create a Lygosapp checkout session
+      const { data, error } = await supabase.functions.invoke('create-lygosapp-checkout', {
+        body: { price_id: priceId },
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data && data.checkout_url) {
+        window.location.href = data.checkout_url; // Redirect to Lygosapp checkout
+      } else {
+        throw new Error("URL de paiement non reçue.");
+      }
+    } catch (error: any) {
+      console.error("Error creating checkout session:", error);
+      showError(`Erreur lors de la création de la session de paiement: ${error.message}`);
+    } finally {
+      setLoadingCheckout(false);
+    }
   };
 
   const plans = [
@@ -17,6 +56,7 @@ const Pricing: React.FC = () => {
       features: ["Analyse simple", "Rapport basique"],
       highlight: false,
       buttonText: "Commencer gratuitement",
+      lygosappPriceId: "free_plan_id", // Placeholder: Replace with actual Lygosapp Price ID if needed for free plan
     },
     {
       name: "Pro Tactique",
@@ -25,6 +65,7 @@ const Pricing: React.FC = () => {
       features: ["Rapports détaillés", "Graphiques enrichis", "Support standard"],
       highlight: true,
       buttonText: "Passer au plan Pro",
+      lygosappPriceId: "price_12345_pro", // IMPORTANT: Replace with actual Lygosapp Price ID for Pro plan
     },
     {
       name: "Elite Stratégique",
@@ -33,6 +74,7 @@ const Pricing: React.FC = () => {
       features: ["Analyses illimitées", "Export PDF", "Veille concurrentielle", "Support prioritaire"],
       highlight: false,
       buttonText: "Passer au plan Elite",
+      lygosappPriceId: "price_67890_elite", // IMPORTANT: Replace with actual Lygosapp Price ID for Elite plan
     },
   ];
 
@@ -82,8 +124,12 @@ const Pricing: React.FC = () => {
                 ))}
               </ul>
             </div>
-            <Button className={`w-full font-subheading text-lg ${plan.highlight ? 'bg-dw-accent-primary hover:bg-dw-accent-primary/90' : 'bg-dw-accent-secondary/20 hover:bg-dw-accent-secondary/30 text-dw-accent-secondary'}`}>
-              {plan.buttonText}
+            <Button
+              onClick={() => handleSubscribe(plan.lygosappPriceId)}
+              className={`w-full font-subheading text-lg ${plan.highlight ? 'bg-dw-accent-primary hover:bg-dw-accent-primary/90' : 'bg-dw-accent-secondary/20 hover:bg-dw-accent-secondary/30 text-dw-accent-secondary'}`}
+              disabled={loadingCheckout || plan.lygosappPriceId === "free_plan_id"} // Disable for free plan or while loading
+            >
+              {loadingCheckout ? 'Chargement...' : plan.buttonText}
             </Button>
           </motion.div>
         ))}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useSession } from '@/contexts/SessionContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,6 +45,7 @@ const Dashboard: React.FC = () => {
   const [anonymizeData, setAnonymizeData] = useState<boolean>(false);
 
   const reportModalRef = useRef<HTMLDivElement>(null); // Ref for the report modal content
+  const [searchParams, setSearchParams] = useSearchParams(); // Add this line
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -52,6 +53,20 @@ const Dashboard: React.FC = () => {
       navigate('/login');
     }
   }, [session, isLoading, navigate]);
+
+  // Handle Lygosapp redirect messages
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
+
+    if (success === 'true') {
+      showSuccess('Abonnement réussi ! Bienvenue dans votre nouveau plan.');
+      setSearchParams({}); // Clear query params
+    } else if (canceled === 'true') {
+      showError('Abonnement annulé. Vous pouvez réessayer à tout moment.');
+      setSearchParams({}); // Clear query params
+    }
+  }, [searchParams, setSearchParams]);
 
   const fetchAnalyses = useCallback(async () => {
     if (!user) return;
