@@ -71,7 +71,7 @@ const Dashboard: React.FC = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [analysisToDeleteId, setAnalysisToDeleteId] = useState<string | null>(null);
-  const [shouldTriggerPdfExport, setShouldTriggerPdfExport] = useState(false); // New state for PDF trigger
+  // Removed: [shouldTriggerPdfExport, setShouldTriggerPdfExport] state
 
   // New states for search, filter, and anonymization
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -177,10 +177,10 @@ const Dashboard: React.FC = () => {
     return summary.length > 100 ? summary.substring(0, 100) + '...' : summary;
   };
 
-  const handleViewReport = (reportContent: string, triggerPdf: boolean = false) => {
+  const handleViewReport = (reportContent: string) => { // Removed triggerPdf parameter
     setSelectedAnalysisReport(reportContent);
     setIsReportModalOpen(true);
-    setShouldTriggerPdfExport(triggerPdf);
+    // Removed setShouldTriggerPdfExport(triggerPdf);
   };
 
   const handleCopyLink = (analysisId: string) => {
@@ -254,16 +254,16 @@ const Dashboard: React.FC = () => {
     }
   }, []); // No dependencies needed as reportModalRef.current is a stable ref
 
-  // Effect to trigger PDF export after modal opens
-  useEffect(() => {
-    if (isReportModalOpen && shouldTriggerPdfExport) {
-      const timer = setTimeout(() => {
-        handleExportPdf();
-        setShouldTriggerPdfExport(false); // Reset the flag
-      }, 500); // Small delay to ensure modal content is rendered
-      return () => clearTimeout(timer);
-    }
-  }, [isReportModalOpen, shouldTriggerPdfExport, handleExportPdf]);
+  // Removed: Effect to trigger PDF export after modal opens
+  // useEffect(() => {
+  //   if (isReportModalOpen && shouldTriggerPdfExport) {
+  //     const timer = setTimeout(() => {
+  //       handleExportPdf();
+  //       setShouldTriggerPdfExport(false); // Reset the flag
+  //     }, 500); // Small delay to ensure modal content is rendered
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [isReportModalOpen, shouldTriggerPdfExport, handleExportPdf]);
 
 
   const handleNewAnalysis = () => {
@@ -553,14 +553,7 @@ const Dashboard: React.FC = () => {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleViewReport(analysis.result_json, true)} // Trigger PDF export
-                        className="text-dw-text-secondary hover:bg-dw-text-secondary/20"
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
+                      {/* Removed: Download button that triggered PDF export directly from table */}
                       <Button
                         variant="ghost"
                         size="sm"
