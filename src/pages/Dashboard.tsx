@@ -54,15 +54,15 @@ const Dashboard: React.FC = () => {
     }
   }, [session, isLoading, navigate]);
 
-  // Handle Lygosapp redirect messages
+  // Handle Moneroo redirect messages
   useEffect(() => {
-    const success = searchParams.get('success');
-    const canceled = searchParams.get('canceled');
+    const monerooSuccess = searchParams.get('moneroo_success');
+    const monerooCanceled = searchParams.get('moneroo_canceled');
 
-    if (success === 'true') {
+    if (monerooSuccess === 'true') {
       showSuccess('Abonnement réussi ! Bienvenue dans votre nouveau plan.');
       setSearchParams({}); // Clear query params
-    } else if (canceled === 'true') {
+    } else if (monerooCanceled === 'true') {
       showError('Abonnement annulé. Vous pouvez réessayer à tout moment.');
       setSearchParams({}); // Clear query params
     }
@@ -313,7 +313,7 @@ const Dashboard: React.FC = () => {
 
       <DeleteConfirmModal
         isOpen={isDeleteConfirmOpen}
-        onClose={() => setIsDeleteConfirmOpen(false)}
+        onClose={() => setIsReportModalOpen(false)}
         onConfirm={handleDeleteAnalysis}
       />
     </div>
