@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { fr } = from 'date-fns/locale';
+import { fr } from 'date-fns/locale';
 
 export const formatAnalysisReport = (rawReport: string): string => {
   // Initial cleaning and basic structure parsing
