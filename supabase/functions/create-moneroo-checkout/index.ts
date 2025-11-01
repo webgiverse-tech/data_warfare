@@ -7,7 +7,9 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('Moneroo Checkout Edge Function invoked.'); // Added log at the very beginning
   if (req.method === 'OPTIONS') {
+    console.log('OPTIONS request received.'); // Added log for preflight
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -25,15 +27,21 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
     if (userError || !user) {
+      console.error('Unauthorized access or user not found:', userError?.message || 'No user session.'); // More specific error log
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    console.log('User authenticated:', user.id); // Log user ID
 
-    const { planId } = await req.json();
+    const requestBody = await req.json(); // This line might fail if the request body is not valid JSON
+    const { planId } = requestBody;
+
+    console.log('Received planId:', planId); // Log the received planId
 
     if (!planId) {
+      console.error('Missing planId in request body.'); // Log if planId is missing
       return new Response(JSON.stringify({ error: 'Missing planId' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -41,18 +49,21 @@ serve(async (req) => {
     }
 
     let amount: number;
-    const currency = "XOF"; // Assuming XOF for Benin
+    const currency = "XOF";
 
     switch (planId) {
       case 'pro':
         amount = parseInt(Deno.env.get('MONEROO_PRO_AMOUNT_XOF') || '0');
+        console.log('Plan Pro selected, amount:', amount); // Log selected plan and amount
         if (amount === 0) throw new Error('MONEROO_PRO_AMOUNT_XOF not set or invalid.');
         break;
       case 'elite':
         amount = parseInt(Deno.env.get('MONEROO_ELITE_AMOUNT_XOF') || '0');
+        console.log('Plan Elite selected, amount:', amount); // Log selected plan and amount
         if (amount === 0) throw new Error('MONEROO_ELITE_AMOUNT_XOF not set or invalid.');
         break;
       default:
+        console.error('Invalid planId received:', planId); // Log if planId is invalid
         return new Response(JSON.stringify({ error: 'Invalid planId' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -60,12 +71,14 @@ serve(async (req) => {
     }
 
     const MONEROO_API_KEY = Deno.env.get('MONEROO_API_KEY');
+    console.log('MONEROO_API_KEY status:', MONEROO_API_KEY ? 'set' : 'not set'); // Check if API key is loaded
     if (!MONEROO_API_KEY) {
       throw new Error('MONEROO_API_KEY is not set in environment variables.');
     }
 
     const successUrl = `${req.headers.get('referer') || Deno.env.get('SUPABASE_URL')}/dashboard?moneroo_success=true`;
     const cancelUrl = `${req.headers.get('referer') || Deno.env.get('SUPABASE_URL')}/pricing?moneroo_canceled=true`;
+    console.log('Moneroo redirect URLs:', { successUrl, cancelUrl }); // Log redirect URLs
 
     const monerooResponse = await fetch('https://api.moneroo.io/v1/payments', {
       method: 'POST',
@@ -78,9 +91,9 @@ serve(async (req) => {
         currency: currency,
         customer: {
           email: user.email,
-          name: user.user_metadata.full_name || user.email, // Use full_name if available, otherwise email
+          name: user.user_metadata.full_name || user.email,
         },
-        payment_method: "mobile_money", // Default to mobile_money, can be made dynamic if needed
+        payment_method: "mobile_money",
         redirect_url: successUrl,
         cancel_url: cancelUrl,
         metadata: {
@@ -90,9 +103,11 @@ serve(async (req) => {
       }),
     });
 
+    console.log('Moneroo API response status:', monerooResponse.status); // Log Moneroo API response status
+
     if (!monerooResponse.ok) {
       const errorData = await monerooResponse.json();
-      console.error('Moneroo API error:', errorData);
+      console.error('Moneroo API error response:', errorData); // Log detailed error from Moneroo
       return new Response(JSON.stringify({ error: errorData.message || 'Failed to create payment session with Moneroo.' }), {
         status: monerooResponse.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -100,6 +115,7 @@ serve(async (req) => {
     }
 
     const { checkout_url } = await monerooResponse.json();
+    console.log('Moneroo checkout_url received:', checkout_url); // Log the received checkout URL
 
     return new Response(JSON.stringify({ checkout_url }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -107,7 +123,7 @@ serve(async (req) => {
     });
 
   } catch (error: any) {
-    console.error('Edge Function caught an error:', error.message);
+    console.error('Edge Function caught an error in try block:', error.message); // Log any unexpected errors
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
