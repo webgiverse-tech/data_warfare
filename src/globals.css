@@ -49,6 +49,15 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Custom Data Warfare Colors */
+    --dw-background-deep: 210 20% 8%; /* Darker background */
+    --dw-background-glass: 210 15% 15%; /* Slightly lighter, for glass effect */
+    --dw-text-primary: 210 40% 98%; /* Light text */
+    --dw-text-secondary: 215 20.2% 65.1%; /* Muted text */
+    --dw-accent-primary: 15 90% 60%; /* Orange/Red accent */
+    --dw-accent-secondary: 190 90% 60%; /* Cyan accent */
+    --dw-error: 0 84.2% 60.2%; /* Red for errors */
   }
 
   .dark {
@@ -87,6 +96,15 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Custom Data Warfare Colors for dark theme */
+    --dw-background-deep: 210 20% 8%;
+    --dw-background-glass: 210 15% 15%;
+    --dw-text-primary: 210 40% 98%;
+    --dw-text-secondary: 215 20.2% 65.1%;
+    --dw-accent-primary: 15 90% 60%;
+    --dw-accent-secondary: 190 90% 60%;
+    --dw-error: 0 62.8% 30.6%;
   }
 }
 
@@ -98,4 +116,43 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom styles for Data Warfare */
+.font-heading {
+  font-family: 'Orbitron', sans-serif;
+}
+
+.font-subheading {
+  font-family: 'Rajdhani', sans-serif;
+}
+
+.font-mono {
+  font-family: 'Space Mono', monospace;
+}
+
+.gradient-text {
+  background: linear-gradient(45deg, hsl(var(--dw-accent-primary)), hsl(var(--dw-accent-secondary)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: hsl(var(--dw-background-deep));
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--dw-accent-secondary) / 0.5);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--dw-accent-secondary));
 }

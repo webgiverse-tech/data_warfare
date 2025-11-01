@@ -62,6 +62,14 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Custom Data Warfare Colors
+        'dw-background-deep': 'hsl(var(--dw-background-deep))',
+        'dw-background-glass': 'hsl(var(--dw-background-glass))',
+        'dw-text-primary': 'hsl(var(--dw-text-primary))',
+        'dw-text-secondary': 'hsl(var(--dw-text-secondary))',
+        'dw-accent-primary': 'hsl(var(--dw-accent-primary))',
+        'dw-accent-secondary': 'hsl(var(--dw-accent-secondary))',
+        'dw-error': 'hsl(var(--dw-error))',
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -89,6 +97,11 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+      },
+      fontFamily: {
+        heading: ['Orbitron', 'sans-serif'],
+        subheading: ['Rajdhani', 'sans-serif'],
+        mono: ['Space Mono', 'monospace'],
       },
     },
   },
