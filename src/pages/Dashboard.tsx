@@ -71,6 +71,7 @@ const Dashboard: React.FC = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [analysisToDeleteId, setAnalysisToDeleteId] = useState<string | null>(null);
+  const [shouldTriggerPdfExport, setShouldTriggerPdfExport] = useState(false); // New state for PDF trigger
 
   // New states for search, filter, and anonymization
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -176,9 +177,10 @@ const Dashboard: React.FC = () => {
     return summary.length > 100 ? summary.substring(0, 100) + '...' : summary;
   };
 
-  const handleViewReport = (reportContent: string) => {
+  const handleViewReport = (reportContent: string, triggerPdf: boolean = false) => {
     setSelectedAnalysisReport(reportContent);
     setIsReportModalOpen(true);
+    setShouldTriggerPdfExport(triggerPdf);
   };
 
   const handleCopyLink = (analysisId: string) => {
@@ -207,7 +209,7 @@ const Dashboard: React.FC = () => {
     setAnalysisToDeleteId(null);
   };
 
-  const handleExportPdf = async () => {
+  const handleExportPdf = useCallback(async () => {
     if (!reportModalRef.current) {
       showError('Impossible de générer le PDF. Contenu du rapport introuvable.');
       return;
@@ -250,7 +252,19 @@ const Dashboard: React.FC = () => {
       console.error('Error generating PDF:', error);
       showError('Erreur lors de la génération du PDF.');
     }
-  };
+  }, []); // No dependencies needed as reportModalRef.current is a stable ref
+
+  // Effect to trigger PDF export after modal opens
+  useEffect(() => {
+    if (isReportModalOpen && shouldTriggerPdfExport) {
+      const timer = setTimeout(() => {
+        handleExportPdf();
+        setShouldTriggerPdfExport(false); // Reset the flag
+      }, 500); // Small delay to ensure modal content is rendered
+      return () => clearTimeout(timer);
+    }
+  }, [isReportModalOpen, shouldTriggerPdfExport, handleExportPdf]);
+
 
   const handleNewAnalysis = () => {
     navigate('/');
@@ -539,7 +553,14 @@ const Dashboard: React.FC = () => {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      {/* Removed direct PDF export from table row to ensure content is rendered */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewReport(analysis.result_json, true)} // Trigger PDF export
+                        className="text-dw-text-secondary hover:bg-dw-text-secondary/20"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -683,7 +704,7 @@ const Dashboard: React.FC = () => {
             <DialogDescription className="text-dw-text-secondary mb-6">
               Êtes-vous sûr de vouloir supprimer cette analyse ? Cette action est irréversible.
             </DialogDescription>
-          </DialogHeader>
+          </DialogDescription>
           <DialogFooter className="flex justify-center space-x-4">
             <Button
               onClick={() => setIsDeleteConfirmOpen(false)}
