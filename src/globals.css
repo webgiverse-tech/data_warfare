@@ -112,3 +112,23 @@
   background-size: 200% auto;
   animation: gradient-shift 3s ease infinite;
 }
+
+/* Custom scrollbar for markdown reports */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--dw-accent-primary);
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.05);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--dw-accent-secondary);
+}

@@ -215,6 +215,9 @@ const Dashboard: React.FC = () => {
 
     showSuccess('Génération du PDF en cours...');
     try {
+      // Add a small delay to ensure the DOM is fully rendered before capturing
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       const canvas = await html2canvas(reportModalRef.current, {
         scale: 2, // Increase scale for better quality
         useCORS: true, // Important for images from external sources
@@ -235,7 +238,7 @@ const Dashboard: React.FC = () => {
       heightLeft -= pdf.internal.pageSize.getHeight();
 
       while (heightLeft >= 0) {
-        position = heightLeft - pdfHeight;
+        position = heightLeft - pdf.internal.pageSize.getHeight(); // Adjust position for next page
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
         heightLeft -= pdf.internal.pageSize.getHeight();
@@ -536,14 +539,7 @@ const Dashboard: React.FC = () => {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleExportPdf()} // PDF export now uses the currently viewed report
-                        className="text-dw-text-secondary hover:bg-dw-text-secondary/20"
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
+                      {/* Removed direct PDF export from table row to ensure content is rendered */}
                       <Button
                         variant="ghost"
                         size="sm"
