@@ -61,7 +61,7 @@ const Header = () => {
                   >
                     <span className="relative z-10">{item.label}</span>
                     {/* Effet de soulignement 3D */}
-                    <span className="absolute bottom-10 left-0 w-0 h-0.5 bg-gradient-to-r from-dw-accent-primary to-dw-accent-secondary group-hover:w-full transition-all duration-300 shadow-[0_0_10px_currentColor]"></span>
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-dw-accent-primary to-dw-accent-secondary group-hover:w-full transition-all duration-300 shadow-[0_0_10px_currentColor]"></span>
                     {/* Glow effect */}
                     <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm bg-gradient-to-r from-dw-accent-primary/20 to-dw-accent-secondary/20 -z-10"></span>
                   </Link>
