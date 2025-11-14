@@ -32,7 +32,7 @@ const Login: React.FC = () => {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="w-full max-w-md bg-dw-background-glass border border-dw-accent-secondary/30 rounded-lg p-8 shadow-lg shadow-dw-accent-secondary/10"
       >
-        <h1 className="text-3xl font-heading gradient-text text-center mb-8 ">
+        <h1 className="text-3xl font-heading gradient-text bg-gradient-to-r from-dw-accent-primary text-center mb-8 ">
           Accès au Terminal
         </h1>
         <Auth
