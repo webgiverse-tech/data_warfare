@@ -1,6 +1,6 @@
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
-import { Profile } from '@/contexts/SessionContext'; // Assuming Profile type is exported
+import { Profile } from '@/contexts/SessionContext';
 
 interface QuotaGaugeProps {
   profile: Profile;
@@ -17,8 +17,7 @@ const QuotaGauge: React.FC<QuotaGaugeProps> = ({ profile }) => {
       <div className="relative w-48 h-48 flex items-center justify-center">
         <Progress
           value={analysesUsedPercentage}
-          className="w-full h-full absolute rounded-full"
-          indicatorClassName="bg-gradient-to-r from-dw-accent-secondary to-dw-accent-primary"
+          className="w-full h-full absolute rounded-full [&>*]:bg-gradient-to-r [&>*]:from-dw-accent-secondary [&>*]:to-dw-accent-primary" // Apply gradient to the indicator using a child selector
           style={{
             transform: 'rotate(-90deg)',
             width: '100%',

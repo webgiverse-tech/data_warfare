@@ -5,17 +5,17 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { showError } from '@/utils/toast';
 import ParticlesBackground from '@/components/ParticlesBackground';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion'; // Import Variants
 import { Search, Code, Gauge, FileText, Link2, Users, Quote } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useSession } from '@/contexts/SessionContext'; // Import useSession
-import AuthModal from '@/components/AuthModal'; // Import AuthModal
+import { useSession } from '@/contexts/SessionContext';
+import AuthModal from '@/components/AuthModal';
 
 const Index = () => {
   const [url, setUrl] = useState<string>('');
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // State for auth modal
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const navigate = useNavigate();
-  const { session, isLoading } = useSession(); // Use session context
+  const { session, isLoading } = useSession();
 
   const handleAnalyzeClick = () => {
     if (!url || !url.startsWith('http')) {
@@ -23,15 +23,15 @@ const Index = () => {
       return;
     }
     if (!session) {
-      setIsAuthModalOpen(true); // Open auth modal if not logged in
+      setIsAuthModalOpen(true);
       return;
     }
     navigate(`/analysis?url=${encodeURIComponent(url)}`);
   };
 
-  const cardVariants = {
+  const cardVariants: Variants = { // Explicitly type cardVariants as Variants
     hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.42, 0, 0.58, 1] } }, // Changed ease to cubic-bezier array
   };
 
   const testimonials = [
@@ -63,7 +63,7 @@ const Index = () => {
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.8, ease: [0.42, 0, 0.58, 1] }} // Changed ease
           className="text-6xl md:text-7xl font-heading text-dw-text-primary mb-6 leading-tight"
         >
           DOMINEZ VOTRE MARCHÉ AVEC L'INTELLIGENCE CONCURRENTIELLE
@@ -71,7 +71,7 @@ const Index = () => {
         <motion.p
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+          transition={{ duration: 0.8, delay: 0.2, ease: [0.42, 0, 0.58, 1] }} // Changed ease
           className="text-xl md:text-2xl text-dw-text-secondary mb-10 max-w-3xl mx-auto"
         >
           Analysez n'importe quel site concurrent et découvrez ses stratégies cachées pour prendre l'avantage.
@@ -80,7 +80,7 @@ const Index = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+          transition={{ duration: 0.8, delay: 0.4, ease: [0.42, 0, 0.58, 1] }} // Changed ease
           className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 w-full max-w-lg mx-auto relative group"
         >
           <Input

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion'; // Import Variants
 import { CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '@/contexts/SessionContext';
@@ -8,9 +8,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { showSuccess, showError } from '@/utils/toast';
 
 const Pricing: React.FC = () => {
-  const cardVariants = {
+  const cardVariants: Variants = { // Explicitly type cardVariants as Variants
     hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.42, 0, 0.58, 1] } }, // Changed ease to cubic-bezier array
   };
 
   const navigate = useNavigate();
@@ -94,7 +94,7 @@ const Pricing: React.FC = () => {
       <motion.h1
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ duration: 0.8, ease: [0.42, 0, 0.58, 1] }} // Changed ease
         className="text-5xl font-heading gradient-text mb-8 text-center"
       >
         Choisissez Votre Plan Tactique
@@ -102,7 +102,7 @@ const Pricing: React.FC = () => {
       <motion.p
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+        transition={{ duration: 0.8, delay: 0.2, ease: [0.42, 0, 0.58, 1] }} // Changed ease
         className="text-xl text-dw-text-secondary mb-12 text-center max-w-2xl"
       >
         Débloquez la puissance de l'intelligence concurrentielle avec le plan qui correspond à vos ambitions.

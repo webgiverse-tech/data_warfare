@@ -4,6 +4,7 @@ import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { Session } from '@supabase/supabase-js'; // Import Session type
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -13,7 +14,8 @@ interface AuthModalProps {
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
 
-  const handleAuthChange = async (event: string) => {
+  // Define the correct type for onAuthStateChange
+  const handleAuthChange: React.ComponentProps<typeof Auth>['onAuthStateChange'] = async (event: string, session: Session | null) => {
     if (event === 'SIGNED_IN') {
       onClose();
       navigate('/'); // Redirect to home after successful sign-in

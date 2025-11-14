@@ -3,7 +3,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { showSuccess, showError } from '@/utils/toast';
 
-interface Profile {
+export interface Profile { // Exported Profile interface
   id: string;
   email: string;
   plan: string;

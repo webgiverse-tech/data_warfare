@@ -1,7 +1,7 @@
 import React from 'react';
 import Particles from 'react-tsparticles';
 import { loadSlim } from 'tsparticles-slim';
-import type { Engine } from 'tsparticles-engine';
+import type { Engine } from 'tsparticles-engine'; // Import Engine from tsparticles-engine
 
 const ParticlesBackground: React.FC = () => {
   const particlesInit = async (engine: Engine) => {
@@ -48,8 +48,8 @@ const ParticlesBackground: React.FC = () => {
               enable: true,
               speed: 20,
               sync: true,
-              startValue: "random",
-              destroy: "none",
+              // Removed startValue as it's not a recognized property for color animation
+              // Removed 'destroy' as it's not a recognized property for color animation
             },
           },
           links: {
