@@ -24,7 +24,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <DialogTitle className="text-3xl font-heading gradient-text text-center mb-4">
             Accès au Terminal
           </DialogTitle>
-          <DialogDescription className="text-dw-text-secondary text-center mb-6">
+          <DialogDescription className="text-dw-text-secondary text-center mb-6 bg-gradient-to-r from-dw-accent-primary to-dw-accent-secondary">
             Connectez-vous ou inscrivez-vous pour lancer votre analyse.
           </DialogDescription>
         </DialogHeader>
