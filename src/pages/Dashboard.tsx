@@ -313,7 +313,7 @@ const Dashboard: React.FC = () => {
 
       <DeleteConfirmModal
         isOpen={isDeleteConfirmOpen}
-        onClose={() => setIsReportModalOpen(false)}
+        onClose={() => setIsDeleteConfirmOpen(false)} {/* CORRECTED LINE HERE */}
         onConfirm={handleDeleteAnalysis}
       />
     </div>
