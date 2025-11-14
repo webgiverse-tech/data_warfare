@@ -30,7 +30,7 @@ const Login: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="w-full max-w-md bg-dw-background-glass border border-dw-accent-secondary/30 rounded-lg p-8 shadow-lg shadow-dw-accent-secondary/10"
+        className="w-full max-w-md bg-gradient-to-r from-dw-accent-primary border border-dw-accent-secondary/30 rounded-lg p-8 shadow-lg shadow-dw-accent-secondary/10"
       >
         <h1 className="text-3xl font-heading gradient-text bg-gradient-to-r from-dw-accent-primary text-center mb-8 ">
           Accès au Terminal
