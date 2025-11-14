@@ -40,7 +40,7 @@ const Header = () => {
             to="/" 
             className="flex items-center space-x-2 group relative z-10"
           >
-            <div className="relative transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
+            <div className="relative transform transition-all duration-300 group-hover:scale-110">
               <div className="absolute inset-0 bg-dw-accent-primary/20 blur-xl rounded-full group-hover:bg-dw-accent-primary/40 transition-all duration-300"></div>
               <img 
                 src="/logo.png" 
