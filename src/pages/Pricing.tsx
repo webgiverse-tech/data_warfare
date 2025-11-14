@@ -63,7 +63,7 @@ const Pricing: React.FC = () => {
     {
       name: "Free (Essai)",
       price: "0 €",
-      analyses: "1",
+      analyses: "10", // Changed from "1" to "10"
       features: ["Analyse simple", "Rapport basique"],
       highlight: false,
       buttonText: "Commencer gratuitement",
