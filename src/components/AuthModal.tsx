@@ -39,7 +39,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   brand: '#ff6b35', // dw-accent-primary
                   brandAccent: '#00d9ff', // dw-accent-secondary
                   brandButtonText: '#ffffff',
-                  defaultButtonBackground: 'rgba(255,255,255,0.08)',
+                  defaultButtonBackground: 'bg-gradient-to-r from-dw-accent-primary to-dw-accent-secondary',
                   defaultButtonBorder: 'rgba(255,255,255,0.1)',
                   defaultButtonText: '#cbd5e1',
                   inputBackground: 'rgba(255,255,255,0.05)',
