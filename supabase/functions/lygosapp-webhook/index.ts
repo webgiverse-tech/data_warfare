@@ -73,13 +73,13 @@ serve(async (req) => {
           analysesRemaining = 104;
         } else if (data.status === 'canceled' || data.status === 'unpaid' || data.status === 'incomplete') {
           newPlan = 'free';
-          analysesRemaining = 1;
+          analysesRemaining = 10; // Updated to 10 analyses for free plan
         }
         break;
       case 'subscription.deleted':
         userId = data.metadata?.user_id || data.customer_id;
         newPlan = 'free';
-        analysesRemaining = 1;
+        analysesRemaining = 10; // Updated to 10 analyses for free plan
         break;
       default:
         console.log(`Unhandled event type: ${eventType}`);
