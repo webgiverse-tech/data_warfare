@@ -4,7 +4,7 @@ import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { Session } from '@supabase/supabase-js'; // Import Session type
+// Removed AuthChangeEvent and Session imports as they are no longer needed here
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -14,13 +14,8 @@ interface AuthModalProps {
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
 
-  // Define the correct type for onAuthStateChange
-  const handleAuthChange: React.ComponentProps<typeof Auth>['onAuthStateChange'] = async (event: string, session: Session | null) => {
-    if (event === 'SIGNED_IN') {
-      onClose();
-      navigate('/'); // Redirect to home after successful sign-in
-    }
-  };
+  // The handleAuthChange function is no longer needed here as SessionContext handles global auth state changes.
+  // The Auth component itself will trigger the global onAuthStateChange event when a user signs in.
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -56,7 +51,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             },
           }}
           theme="dark"
-          onAuthStateChange={handleAuthChange}
+          // Removed onAuthStateChange prop as it's not supported by the Auth component directly.
+          // Global auth state changes are handled by supabase.auth.onAuthStateChange in SessionContext.
         />
       </DialogContent>
     </Dialog>
